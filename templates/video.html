@@ -1,0 +1,13 @@
+{% extends 'base.html' %} 
+{% block head %} 
+{% endblock %} 
+{% block body %}
+    <div class="title mt-3">
+    <img src="{{url_for('save')}}" alt="">
+        <h3 class="title-text"><strong>Object Detection using YOLOv8 example</strong></h3>
+        <h3 class="title-text"><strong>Output Video</strong></h3>
+
+        <img src="{{ url_for('webapp') }}" alt="Upload video" />
+    </div>
+
+{% endblock %}

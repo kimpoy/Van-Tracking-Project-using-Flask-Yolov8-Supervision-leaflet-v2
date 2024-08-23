@@ -1,0 +1,191 @@
+{% extends 'base.html' %} {% block head %}
+<link
+  rel="stylesheet"
+  href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<style>
+  #customers {
+    font-family: Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  #customers td,
+  #customers th {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+
+  #customers tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+
+  #customers tr:hover {
+    background-color: #ddd;
+  }
+
+  #customers th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #04aa6d;
+    color: white;
+  }
+</style>
+{% endblock %} {% block body %}
+
+<div>
+  <h1>A Fancy Table</h1>
+  <p>Type something in the input field to search the table</p>
+  <input
+    type="text"
+    id="myInput"
+    onkeyup="myFunction()"
+    placeholder="Search YYYY-MM-DD"
+    title="Type in a date"
+  />
+  <!-- <input class="form-control" id="myInput" type="text" placeholder="Search.." /> -->
+  <br />
+  <table class="table" id="customers">
+    <thead>
+      <th>Cash</th>
+      <th>Date</th>
+      <th>Roll No</th>
+    </thead>
+    <tbody id="tbody1"></tbody>
+    <h1 id="sum"></h1>
+  </table>
+</div>
+
+<script>
+  /*  $(document).ready(function () {
+    $("#myInput").on("keyup", function () {
+      var value = $(this).val().toLowerCase();
+      $("#tbody1 tr").filter(function () {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+      });
+    });
+  }); */
+  function myFunction() {
+    var input, filter, table, tr, td, i, txtValue;
+    let sum_cash = 0;
+    input = document.getElementById("myInput");
+    sum_h1 = document.getElementById("sum");
+    filter = input.value.toUpperCase();
+    table = document.getElementById("customers");
+    tr = table.getElementsByTagName("tr");
+    for (i = 0; i < tr.length; i++) {
+      td = tr[i].getElementsByTagName("td")[1];
+      td_cash = tr[i].getElementsByTagName("td")[0];
+      if (td) {
+        txtValue = td.textContent || td.innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+          tr[i].style.display = "";
+          /* calculate sum of cash */
+          if (td_cash) {
+            sum_cash += parseInt(td_cash.innerText);
+          }
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+    sum_h1.innerHTML = "Total: ".concat(sum_cash);
+    console.log(sum_cash);
+  }
+</script>
+<script src="https://www.gstatic.com/firebasejs/8.4.2/firebase.js"></script>
+<script src="../static/fireConfig.js"></script>
+<script src="../static/auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.17.1/firebase-database.js"></script>
+
+<script type="module">
+  let stdNo = 0;
+  let tbody = document.getElementById("tbody1");
+
+  function AddItemToTable(cash, date, roll) {
+    let trow = document.createElement("tr");
+    let td1 = document.createElement("td");
+    let td2 = document.createElement("td");
+    let td3 = document.createElement("td");
+
+    td1.innerHTML = cash;
+    td2.innerHTML = date;
+    td3.innerHTML = roll;
+
+    trow.appendChild(td1);
+    trow.appendChild(td2);
+    trow.appendChild(td3);
+
+    tbody.appendChild(trow);
+  }
+
+  function AddAllItemsToTable(TheStudent) {
+    stdNo = 0;
+    tbody.innerHTML = "";
+    let cash = 0;
+    TheStudent.forEach((element) => {
+      cash += element.Cash;
+      AddItemToTable(element.Cash, element.Date, element.key);
+    });
+    /* AddItemToTable(cash, "", ""); */
+  }
+
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCIJ4zoK93DWzqs_5oT553kKPzRrHcYiNY",
+    authDomain: "iot-project-6b313.firebaseapp.com",
+    databaseURL: "https://iot-project-6b313-default-rtdb.firebaseio.com",
+    projectId: "iot-project-6b313",
+    storageBucket: "iot-project-6b313.appspot.com",
+    messagingSenderId: "495598691791",
+    appId: "1:495598691791:web:63ea03368d69cdb7029eba",
+    measurementId: "G-HGKZL3R7DW",
+  };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+
+  function GetAllDataOnce() {
+    firebase
+      .database()
+      .ref("Earnings/")
+      .on("value", function (snapshot) {
+        var students = [];
+        snapshot.forEach(function (childSnapshot) {
+          var key = childSnapshot.key;
+          var childData = childSnapshot.val();
+          /* console.log(key);
+              console.log(childData.Instructor); */
+          let myd = Object.assign(childData, { key });
+          /* students.push(key);
+              students.push(childData); */
+          students.push(myd);
+        });
+
+        AddAllItemsToTable(students);
+      });
+    /*  get(child(dbRef, "student")).then((snapshot) => {
+          var students = [];
+          snapshot.forEach((childSnapshot) => {
+            students.push(childSnapshot.val());
+          });
+
+          AddAllItemsToTable(students);
+        }); */
+  }
+
+  window.onload = GetAllDataOnce;
+</script>
+
+{% endblock %}
